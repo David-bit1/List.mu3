@@ -7,12 +7,12 @@ router.get('/', async (req, res) => {
   try {
     const { content } = await m3u.generateUltra();
     res.setHeader('Content-Type', 'application/x-mpegURL; charset=utf-8');
-    res.setHeader('Content-Disposition', 'inline; filename="ultrapelis.m3u"');
+    res.setHeader('Content-Disposition', 'attachment; filename="ultrapelis.m3u"');
     res.send(content);
   } catch (e) {
     console.error('[m3u] fallo total al generar:', e.message);
     res.setHeader('Content-Type', 'application/x-mpegURL; charset=utf-8');
-    res.setHeader('Content-Disposition', 'inline; filename="ultrapelis.m3u"');
+    res.setHeader('Content-Disposition', 'attachment; filename="ultrapelis.m3u"');
     res.send('#EXTM3U\n');
   }
 });

@@ -124,7 +124,7 @@ npm run dev:frontend        # Vite en http://localhost:5173, proxima /api a loca
 
 Genera la lista combinada (películas → series → canales) en un único archivo M3U válido.
 
-- **GET** `/api/m3u` → `ultrapelis.m3u` (`inline`, `application/x-mpegurl`).
+- **GET** `/api/m3u` → `ultrapelis.m3u` (descarga `attachment`, `application/x-mpegURL`; el navegador descarga el archivo y nunca lo reproduce).
 - Por categoría: `/api/m3u/movies`, `/api/m3u/series`, `/api/m3u/tv`, `/api/m3u/all`.
 
 Reglas: solo activos, omite streams nulos/vacíos/caídos, elimina duplicados, y si Supabase falla responde con un M3U válido (`#EXTM3U`) sin exponer errores internos.
