@@ -1,0 +1,134 @@
+# IPTV Catalog Admin
+
+Panel de administración para gestionar un catálogo multimedia (películas, series, TV en vivo) y **generar listas M3U automáticamente** desde Supabase. La información se completa sola mediante la API de **TMDb**.
+
+> Stack: **Node.js + Express** en el backend, **HTML/CSS/JS** en el frontend y **Supabase (PostgreSQL)** como base de datos. Se despliega en **Vercel** como una *serverless function* de Express (no es un proyecto Next.js, pero es 100% compatible con Vercel).
+
+---
+
+## Características
+
+- Autenticación de administrador (JWT).
+- Búsqueda en TMDb en tiempo real (películas y series).
+- Alta de películas y series con temporadas → episodios (cada uno con su propio stream).
+- Módulo independiente de TV en Vivo (tvg-id, tvg-name, logo, grupo, país, idioma).
+- Verificador de streams caídos (marca `active` / `down`).
+- Generador M3U: `movies.m3u`, `series.m3u`, `tv.m3u`, `todo.m3u` y el endpoint agregado `/api/m3u` (`ultrapelis.m3u`).
+- Dashboard con estadísticas.
+
+---
+
+## Estructura
+
+```
+.
+├── api/index.js          # Entry serverless para Vercel (exporta la app Express)
+├── backend/src/          # Código del servidor (app, rutas, servicios)
+├── frontend/             # HTML/CSS/JS del panel (servido estáticamente)
+├── supabase/schema.sql   # Esquema SQL normalizado para crear las tablas
+├── vercel.json           # Configuración de despliegue en Vercel
+├── scripts/build-check.js# Valida que el proyecto compila (npm run build)
+└── .env.example          # Plantilla de variables de entorno
+```
+
+---
+
+## Instalación
+
+```bash
+git clone <tu-repo>
+cd <tu-repo>
+npm install
+cp .env.example .env      # luego edita .env con tus credenciales
+```
+
+Crea las tablas en Supabase pegando el contenido de `supabase/schema.sql` en el **SQL Editor** de tu proyecto Supabase y ejecutándolo.
+
+---
+
+## Variables de entorno
+
+Copia `.env.example` a `.env` y completa:
+
+| Variable | Descripción |
+|----------|-------------|
+| `SUPABASE_URL` | URL de tu proyecto Supabase. |
+| `SUPABASE_SERVICE_KEY` | **Service role key** (backend). Permite escritura sin RLS. Mantenla solo en el servidor. |
+| `SUPABASE_ANON_KEY` | Clave pública (respaldo). |
+| `TMDB_API_KEY` | API key v3 de TMDb. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Acceso al panel. |
+| `JWT_SECRET` | Frase para firmar los JWT (usa una cadena larga y aleatoria). |
+| `PORT` | Puerto local (Vercel lo ignora). |
+
+### Conectar Supabase
+1. Crea un proyecto en <https://supabase.com>.
+2. En **Project Settings → API** copia la `URL` y la `service_role` key.
+3. Ejecuta `supabase/schema.sql` en el SQL Editor.
+
+### Obtener API Key de TMDb
+1. Regístrate en <https://www.themoviedb.org>.
+2. En **Settings → API** genera una **API Key (v3 auth)**.
+3. Pégala en `TMDB_API_KEY`.
+
+---
+
+## Ejecutar en desarrollo
+
+```bash
+npm run dev
+```
+
+Abre `http://localhost:5050` (o el `PORT` que hayas configurado). Inicia sesión con tu `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
+
+```bash
+npm run build     # verifica que el proyecto compila sin errores
+npm start         # arranque en producción local
+```
+
+---
+
+## Desplegar en Vercel
+
+1. Sube el repo a GitHub.
+2. En Vercel, importa el repositorio (detección automática de Node.js).
+3. En **Settings → Environment Variables** añade las mismas variables de `.env.example` (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `TMDB_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `JWT_SECRET`).
+4. Despliega. `vercel.json` ya direcciona todo el tráfico a la *serverless function* de Express (`api/index.js`).
+
+El frontend queda servido por la propia función en `/` y la API en `/api/*`.
+
+---
+
+## API `/api/m3u`
+
+Genera la lista combinada (películas → series → canales) en un único archivo M3U válido.
+
+- **GET** `/api/m3u` → devuelve `ultrapelis.m3u` (`inline`) con `Content-Type: application/x-mpegURL`.
+- También existen por categoría: `/api/m3u/movies`, `/api/m3u/series`, `/api/m3u/tv`, `/api/m3u/all`.
+
+Reglas del generador:
+- Solo incluye registros **activos**.
+- Omite streams nulos, vacíos o caídos.
+- Elimina **duplicados** (misma URL).
+- Si Supabase falla, responde con un M3U válido (`#EXTM3U`) y registra el error en el servidor (nunca expone datos internos ni HTML).
+- Formato de cada entrada:
+
+```m3u
+#EXTM3U
+
+#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="" group-title="Categoría",Título
+URL_DEL_STREAM
+```
+
+Puedes apuntar directamente tu reproductor (VLC, Kodi, TiviMate, OTT Navigator, IPTV Smarters) a:
+
+```
+https://<tu-dominio-vercel>/api/m3u
+```
+
+---
+
+## Seguridad
+
+- Las claves de Supabase/TMDb/JWT solo se leen desde variables de entorno.
+- El `.env` está en `.gitignore`; nunca se sube al repositorio.
+- El backend usa la `service_role` key solo en el servidor.

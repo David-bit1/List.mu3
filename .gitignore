@@ -1,0 +1,32 @@
+# Dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# Variables de entorno (NO subir claves reales)
+.env
+.env.local
+.env.*.local
+
+# Vercel / Next.js
+.vercel
+.next
+out
+
+# Logs y cachés
+*.log
+npm-debug.log*
+logs/
+.cache
+
+# Kilo / herramientas locales
+.kilo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor / SO
+.idea
+.vscode/
+*.swp

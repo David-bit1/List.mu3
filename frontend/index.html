@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPTV Catalog Admin</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Login -->
+  <section id="login" class="login">
+    <form id="loginForm" class="login-card">
+      <h1>IPTV <span>Admin</span></h1>
+      <input id="username" placeholder="Usuario" autocomplete="username" />
+      <input id="password" type="password" placeholder="Contraseña" autocomplete="current-password" />
+      <button type="submit">Entrar</button>
+      <p id="loginError" class="error"></p>
+    </form>
+  </section>
+
+  <!-- App -->
+  <div id="app" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">IPTV <span>Admin</span></div>
+      <nav>
+        <a data-view="dashboard" class="active">Dashboard</a>
+        <a data-view="movies">Películas</a>
+        <a data-view="series">Series</a>
+        <a data-view="channels">TV en Vivo</a>
+        <a data-view="tmdb">Buscar en TMDb</a>
+        <a data-view="m3u">Generar M3U</a>
+      </nav>
+      <button id="logout" class="logout">Salir</button>
+    </aside>
+
+    <main class="content">
+      <header class="topbar"><h2 id="viewTitle">Dashboard</h2></header>
+      <div id="view" class="view"></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
