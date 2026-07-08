@@ -39,11 +39,21 @@ Arquitectura desplegada por separado:
 ├── supabase/
 │   └── schema.sql                # Esquema SQL normalizado
 ├── package.json                  # Monorepo con npm workspaces
-├── .env.example                  # Variables de ambos servicios
 ├── .gitignore
 ├── README.md
 └── playlist.m3u                  # Ejemplo estático (la lista real se genera vía API)
 ```
+
+### Variables de entorno
+
+Cada servicio tiene su propio `.env.example`. No hay un archivo central; se copia el que corresponde:
+
+| Archivo | Destino | Para qué |
+|---------|---------|----------|
+| `backend/.env.example` | `backend/.env` (Render) | Variables del backend: `PORT`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `TMDB_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `JWT_SECRET`, `CORS_ORIGIN` |
+| `frontend/.env.example` | `frontend/.env` (Vercel) | Variables del frontend: `VITE_API_URL` (URL del backend en Render) |
+
+> El `.env` real de cada servicio se carga con `dotenv` desde el directorio del servicio; nunca se sube al repositorio.
 
 ---
 
