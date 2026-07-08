@@ -11,6 +11,8 @@
     "dev:backend": "npm -w backend run dev",
     "dev:frontend": "npm -w frontend run dev",
     "build:backend": "npm -w backend run build",
-    "build:frontend": "npm -w frontend run build"
+    "build:frontend": "npm -w frontend run build",
+    "check:env": "node scripts/check-env-examples.js",
+    "prepare": "node scripts/setup-git-hooks.js"
   }
 }
