@@ -19,6 +19,9 @@ npm-debug.log*
 logs/
 .cache
 
+# Build output (Vite)
+dist/
+
 # Kilo / herramientas locales
 .kilo
 

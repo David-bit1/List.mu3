@@ -1,3 +1,7 @@
+import { API, img, m3uUrl } from './api.js';
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
@@ -157,7 +161,7 @@ const views = {
         <button class="btn ghost" data-gen="tv">tv.m3u</button>
       </div>
       <p class="muted" style="margin-top:1rem">También puedes apuntar tu reproductor directamente a:</p>
-      <code style="display:block;margin-top:.5rem;color:var(--ok)">${location.origin}/api/m3u/all</code>`;
+      <code style="display:block;margin-top:.5rem;color:var(--ok)">${API_BASE || location.origin}/api/m3u/all</code>`;
     $$('[data-gen]', view).forEach((b) => b.onclick = () => { window.open(m3uUrl(b.dataset.gen), '_blank'); });
   },
 };
@@ -187,7 +191,7 @@ async function tmdbToMovie(id) {
   $('.close', dlg).onclick = () => dlg.remove();
   $('#cancel', dlg).onclick = () => dlg.remove();
   $('#save', dlg).onclick = async () => {
-    const stream = $('#stream', m).value.trim();
+    const stream = $('#stream', dlg).value.trim();
     if (!stream) return toast('Agrega el enlace del stream', 'err');
     await API.createMovie({
       tmdb_id: m.id, title: m.title, original_title: m.original_title, synopsis: m.overview,
@@ -257,7 +261,7 @@ async function episodeModal(series, seasonId) {
     const ep = eps.find((x) => x.episode_number == b.dataset.add);
     const url = $(`#url-${b.dataset.add}`, m).value.trim();
     if (!url) return toast('Pon el enlace', 'err');
-    await API.addEpisode(seasonId, {
+    await API.addEpisode(series.id, seasonId, {
       episode_number: ep.episode_number, title: ep.name, tmdb_id: ep.id,
       still_path: ep.still_path, synopsis: ep.overview, duration: ep.runtime, air_date: ep.air_date, stream: url,
     }).then(() => toast('Episodio guardado', 'ok')).catch((e) => toast(e.message, 'err'));

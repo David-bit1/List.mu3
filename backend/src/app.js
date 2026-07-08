@@ -1,5 +1,6 @@
-const path = require('path');
+const cors = require('cors');
 const express = require('express');
+const config = require('./config');
 
 const authRoutes = require('./routes/auth');
 const tmdbRoutes = require('./routes/tmdb');
@@ -11,6 +12,7 @@ const m3uRoutes = require('./routes/m3u');
 const streamsRoutes = require('./routes/streams');
 
 const app = express();
+app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
@@ -21,7 +23,5 @@ app.use('/api/channels', channelsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/m3u', m3uRoutes);
-
-app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 
 module.exports = app;

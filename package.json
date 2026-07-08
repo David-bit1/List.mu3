@@ -1,18 +1,16 @@
 {
   "name": "iptv-catalog-admin",
   "version": "1.0.0",
-  "description": "Panel de administración de catálogo multimedia y generador M3U (Express + Supabase + TMDb) desplegable en Vercel",
   "private": true,
-  "main": "backend/src/index.js",
+  "description": "Monorepo: frontend (Vite/Vercel) + backend (Express/Render) para catálogo multimedia y generador M3U.",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "dev": "node --watch backend/src/index.js",
-    "start": "node backend/src/index.js",
-    "build": "node scripts/build-check.js"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2"
+    "dev:backend": "npm -w backend run dev",
+    "dev:frontend": "npm -w frontend run dev",
+    "build:backend": "npm -w backend run build",
+    "build:frontend": "npm -w frontend run build"
   }
 }

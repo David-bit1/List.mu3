@@ -1,4 +1,6 @@
-const API = {
+const BASE = import.meta.env.VITE_API_URL || '';
+
+export const API = {
   token: localStorage.getItem('iptv_token') || '',
 
   setToken(t) {
@@ -13,7 +15,7 @@ const API = {
     const opts = { method, headers: { 'Content-Type': 'application/json' } };
     if (this.token) opts.headers.Authorization = `Bearer ${this.token}`;
     if (body) opts.body = JSON.stringify(body);
-    const res = await fetch('/api' + url, opts);
+    const res = await fetch(BASE + '/api' + url, opts);
     if (res.status === 401) {
       this.logout();
       location.reload();
@@ -41,7 +43,8 @@ const API = {
   getSeries: (id) => API.req('GET', `/series/${id}`),
   createSeries: (b) => API.req('POST', '/series', b),
   addSeason: (id, b) => API.req('POST', `/series/${id}/seasons`, b),
-  addEpisode: (seasonId, b) => API.req('POST', `/series/${id}/seasons/${seasonId}/episodes`, b),
+  addEpisode: (seriesId, seasonId, b) =>
+    API.req('POST', `/series/${seriesId}/seasons/${seasonId}/episodes`, b),
   addEpServer: (epId, b) => API.req('POST', `/series/episodes/${epId}/servers`, b),
   delSeries: (id) => API.req('DELETE', `/series/${id}`),
 
@@ -53,11 +56,11 @@ const API = {
   checkStreams: () => API.req('POST', '/streams/check'),
 };
 
-function img(path, size = 'w500') {
+export function img(path, size = 'w500') {
   if (!path) return '';
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
-function m3uUrl(type) {
-  return `/api/m3u/${type}`;
+export function m3uUrl(type) {
+  return `${BASE}/api/m3u/${type}`;
 }

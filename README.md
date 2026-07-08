@@ -2,19 +2,12 @@
 
 Panel de administración para gestionar un catálogo multimedia (películas, series, TV en vivo) y **generar listas M3U automáticamente** desde Supabase. La información se completa sola mediante la API de **TMDb**.
 
-> Stack: **Node.js + Express** en el backend, **HTML/CSS/JS** en el frontend y **Supabase (PostgreSQL)** como base de datos. Se despliega en **Vercel** como una *serverless function* de Express (no es un proyecto Next.js, pero es 100% compatible con Vercel).
+Arquitectura desplegada por separado:
 
----
-
-## Características
-
-- Autenticación de administrador (JWT).
-- Búsqueda en TMDb en tiempo real (películas y series).
-- Alta de películas y series con temporadas → episodios (cada uno con su propio stream).
-- Módulo independiente de TV en Vivo (tvg-id, tvg-name, logo, grupo, país, idioma).
-- Verificador de streams caídos (marca `active` / `down`).
-- Generador M3U: `movies.m3u`, `series.m3u`, `tv.m3u`, `todo.m3u` y el endpoint agregado `/api/m3u` (`ultrapelis.m3u`).
-- Dashboard con estadísticas.
+- **Frontend** → [Vite](https://vitejs.dev/) + HTML/CSS/JS, desplegado en **Vercel** (sitio estático).
+- **Backend** → **Express** + Supabase + TMDb, desplegado en **Render** (API).
+- **Base de datos** → **Supabase** (PostgreSQL).
+- El frontend consume el backend a través de `VITE_API_URL` + CORS (no usa `localhost` en producción).
 
 ---
 
@@ -22,96 +15,98 @@ Panel de administración para gestionar un catálogo multimedia (películas, ser
 
 ```
 .
-├── api/index.js              # Entry serverless Vercel (exporta la app Express)
-├── backend/src/
-│   ├── app.js                # Ensambla la app Express y monta las rutas
-│   ├── config.js             # Configuración desde variables de entorno
-│   ├── lib/                  # Servicios y utilidades reutilizables
-│   │   ├── supabase.js       # Cliente único de Supabase (lazy)
-│   │   ├── tmdb.js           # Servicio TMDb
-│   │   ├── m3u.js            # Generador M3U
-│   │   ├── streamChecker.js  # Verificador de streams caídos
-│   │   └── helpers.js        # Géneros/servidores
-│   ├── middleware/
-│   │   └── auth.js           # Autenticación JWT
-│   └── routes/               # Rutas API (auth, tmdb, movies, series, channels, dashboard, m3u, streams)
-├── public/                   # Frontend HTML/CSS/JS (servido estáticamente por Vercel)
-├── supabase/schema.sql       # Esquema SQL normalizado
-├── scripts/build-check.js    # Valida que el proyecto compila (npm run build)
-├── vercel.json               # Configuración de despliegue en Vercel
-├── package.json
-├── .env.example              # Plantilla de variables de entorno
-└── playlist.m3u              # Ejemplo estático (la lista real se genera vía API)
+├── backend/                      # API Express (Render)
+│   ├── package.json
+│   ├── .env.example
+│   ├── src/
+│   │   ├── app.js                # Ensambla Express + CORS y monta rutas
+│   │   ├── config.js             # Config desde variables de entorno
+│   │   ├── index.js              # Arranque (listen) para producción/local
+│   │   ├── lib/                  # servicios: supabase, tmdb, m3u, streamChecker, helpers
+│   │   ├── middleware/auth.js    # Autenticación JWT
+│   │   └── routes/               # auth, tmdb, movies, series, channels, dashboard, m3u, streams
+│   └── scripts/build-check.js    # Valida compilación (npm run build)
+├── frontend/                     # SPA estática (Vercel)
+│   ├── package.json
+│   ├── vite.config.js            # Proxy /api -> backend en dev
+│   ├── .env.example              # VITE_API_URL
+│   ├── index.html
+│   └── src/
+│       ├── main.js               # Entrada Vite
+│       ├── api.js                # Cliente API (usa VITE_API_URL)
+│       ├── app.js                # Lógica del panel
+│       └── styles.css
+├── supabase/
+│   └── schema.sql                # Esquema SQL normalizado
+├── package.json                  # Monorepo con npm workspaces
+├── .env.example                  # Variables de ambos servicios
+├── .gitignore
+├── README.md
+└── playlist.m3u                  # Ejemplo estático (la lista real se genera vía API)
 ```
 
-> **Nota sobre `api/`:** el proyecto usa una app Express monolítica. Se expone como **una sola función serverless** (`api/index.js`) que monta todas las rutas desde `backend/src/routes`. Dividir en varias funciones (`api/m3u`, `api/movies`, etc.) duplicaría la app, el middleware y el cliente de Supabase en cada arranque, así que se mantiene un único entry point; la modularidad vive dentro de `backend/src/routes`.
-
 ---
 
----
+## Backend (Render)
 
-## Instalación
+### Ejecutar en local
 
 ```bash
-git clone <tu-repo>
-cd <tu-repo>
-npm install
-cp .env.example .env      # luego edita .env con tus credenciales
+npm install                 # instala backend + frontend (workspaces)
+cp backend/.env.example backend/.env   # completa tus credenciales
+npm run dev:backend         # node --watch backend/src/index.js
 ```
 
-Crea las tablas en Supabase pegando el contenido de `supabase/schema.sql` en el **SQL Editor** de tu proyecto Supabase y ejecutándolo.
+### Desplegar en Render
+
+1. En Render crea un **Web Service** apuntando a este repo.
+2. **Root Directory:** `backend`.
+3. **Build Command:** `npm install` (o `npm ci`).
+4. **Start Command:** `npm start` (equivale a `node src/index.js`).
+5. **Environment:** añade las variables de `backend/.env.example`:
+   - `PORT` (Render lo inyecta solo), `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `TMDB_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `JWT_SECRET`, `CORS_ORIGIN` (la URL de tu frontend en Vercel).
+6. Despliega. La API quedará en `https://<tu-backend>.onrender.com`.
+
+El backend escucha en `process.env.PORT` y habilita CORS para el origen del frontend.
 
 ---
 
-## Variables de entorno
+## Frontend (Vercel)
 
-Copia `.env.example` a `.env` y completa:
+### Ejecutar en local
 
-| Variable | Descripción |
-|----------|-------------|
-| `SUPABASE_URL` | URL de tu proyecto Supabase. |
-| `SUPABASE_SERVICE_KEY` | **Service role key** (backend). Permite escritura sin RLS. Mantenla solo en el servidor. |
-| `SUPABASE_ANON_KEY` | Clave pública (respaldo). |
-| `TMDB_API_KEY` | API key v3 de TMDb. |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Acceso al panel. |
-| `JWT_SECRET` | Frase para firmar los JWT (usa una cadena larga y aleatoria). |
-| `PORT` | Puerto local (Vercel lo ignora). |
+```bash
+npm install
+cp frontend/.env.example frontend/.env   # VITE_API_URL= (vacío usa el proxy de Vite)
+npm run dev:frontend        # Vite en http://localhost:5173, proxima /api a localhost:5050
+```
 
-### Conectar Supabase
+> En desarrollo, `vite.config.js` hace proxy de `/api` al backend (`BACKEND_URL`, por defecto `http://localhost:5050`), así no necesitas `VITE_API_URL`.
+
+### Desplegar en Vercel
+
+1. Importa el repo en Vercel.
+2. **Root Directory:** `frontend`.
+3. **Build Command:** `npm run build` · **Output Directory:** `dist` (Vite lo detecta solo).
+4. **Environment:** `VITE_API_URL=https://<tu-backend>.onrender.com` (sin barra final).
+5. Despliega. El panel quedará en tu dominio de Vercel.
+
+> `vercel.json` ya no es necesario: Vercel detecta Vite automáticamente y sirve `dist/`.
+
+---
+
+## Conectar Supabase
+
 1. Crea un proyecto en <https://supabase.com>.
-2. En **Project Settings → API** copia la `URL` y la `service_role` key.
+2. En **Project Settings → API** copia `URL` y la `service_role` key.
 3. Ejecuta `supabase/schema.sql` en el SQL Editor.
+4. Pon esas claves en las variables del backend (Render).
 
-### Obtener API Key de TMDb
+## Obtener API Key de TMDb
+
 1. Regístrate en <https://www.themoviedb.org>.
 2. En **Settings → API** genera una **API Key (v3 auth)**.
-3. Pégala en `TMDB_API_KEY`.
-
----
-
-## Ejecutar en desarrollo
-
-```bash
-npm run dev
-```
-
-Abre `http://localhost:5050` (o el `PORT` que hayas configurado). Inicia sesión con tu `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
-
-```bash
-npm run build     # verifica que el proyecto compila sin errores
-npm start         # arranque en producción local
-```
-
----
-
-## Desplegar en Vercel
-
-1. Sube el repo a GitHub.
-2. En Vercel, importa el repositorio (detección automática de Node.js).
-3. En **Settings → Environment Variables** añade las mismas variables de `.env.example` (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `TMDB_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `JWT_SECRET`).
-4. Despliega. `vercel.json` direcciona `/api/*` a la *serverless function* de Express (`api/index.js`); el resto (el frontend en `public/`) lo sirve Vercel como archivos estáticos.
-
-El frontend queda en `/` (estático) y la API en `/api/*` (función). En desarrollo local, `npm run dev` sirve todo desde la propia app Express.
+3. Pégala en `TMDB_API_KEY` del backend.
 
 ---
 
@@ -119,33 +114,30 @@ El frontend queda en `/` (estático) y la API en `/api/*` (función). En desarro
 
 Genera la lista combinada (películas → series → canales) en un único archivo M3U válido.
 
-- **GET** `/api/m3u` → devuelve `ultrapelis.m3u` (`inline`) con `Content-Type: application/x-mpegURL`.
-- También existen por categoría: `/api/m3u/movies`, `/api/m3u/series`, `/api/m3u/tv`, `/api/m3u/all`.
+- **GET** `/api/m3u` → `ultrapelis.m3u` (`inline`, `application/x-mpegurl`).
+- Por categoría: `/api/m3u/movies`, `/api/m3u/series`, `/api/m3u/tv`, `/api/m3u/all`.
 
-Reglas del generador:
-- Solo incluye registros **activos**.
-- Omite streams nulos, vacíos o caídos.
-- Elimina **duplicados** (misma URL).
-- Si Supabase falla, responde con un M3U válido (`#EXTM3U`) y registra el error en el servidor (nunca expone datos internos ni HTML).
-- Formato de cada entrada:
+Reglas: solo activos, omite streams nulos/vacíos/caídos, elimina duplicados, y si Supabase falla responde con un M3U válido (`#EXTM3U`) sin exponer errores internos.
 
-```m3u
-#EXTM3U
-
-#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="" group-title="Categoría",Título
-URL_DEL_STREAM
-```
-
-Puedes apuntar directamente tu reproductor (VLC, Kodi, TiviMate, OTT Navigator, IPTV Smarters) a:
+Puedes apuntar tu reproductor (VLC, Kodi, TiviMate, OTT Navigator, IPTV Smarters) a:
 
 ```
-https://<tu-dominio-vercel>/api/m3u
+https://<tu-backend>.onrender.com/api/m3u
 ```
 
 ---
 
+## Scripts (monorepo)
+
+```bash
+npm run dev:backend      # backend en modo desarrollo
+npm run dev:frontend     # frontend (Vite) en modo desarrollo
+npm run build:backend    # valida que el backend compila
+npm run build:frontend   # build de producción del frontend (dist/)
+```
+
 ## Seguridad
 
-- Las claves de Supabase/TMDb/JWT solo se leen desde variables de entorno.
-- El `.env` está en `.gitignore`; nunca se sube al repositorio.
+- Las claves solo se leen de variables de entorno; `.env` está en `.gitignore`.
 - El backend usa la `service_role` key solo en el servidor.
+- CORS restringe el origen del frontend en producción (`CORS_ORIGIN`).

@@ -10,6 +10,9 @@ const config = {
   jwtSecret: process.env.JWT_SECRET || 'cambia-este-secreto',
   adminUser: process.env.ADMIN_USERNAME || 'admin',
   adminPass: process.env.ADMIN_PASSWORD || 'admin',
+  corsOrigin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : true,
 };
 
 module.exports = config;
