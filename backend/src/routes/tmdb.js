@@ -1,6 +1,6 @@
 const router = require('express').Router();
-const tmdb = require('../tmdb');
-const { authMiddleware } = require('../auth');
+const tmdb = require('../lib/tmdb');
+const { authMiddleware } = require('../middleware/auth');
 
 router.get('/search', authMiddleware, async (req, res) => {
   try {

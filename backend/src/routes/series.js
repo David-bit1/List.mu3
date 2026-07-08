@@ -1,7 +1,7 @@
 const router = require('express').Router();
-const supabase = require('../supabase');
-const { authMiddleware } = require('../auth');
-const { upsertGenres, getOrCreateServer, setGenres } = require('../helpers');
+const supabase = require('../lib/supabase');
+const { authMiddleware } = require('../middleware/auth');
+const { upsertGenres, getOrCreateServer, setGenres } = require('../lib/helpers');
 
 router.use(authMiddleware);
 

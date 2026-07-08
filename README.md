@@ -22,14 +22,31 @@ Panel de administración para gestionar un catálogo multimedia (películas, ser
 
 ```
 .
-├── api/index.js          # Entry serverless para Vercel (exporta la app Express)
-├── backend/src/          # Código del servidor (app, rutas, servicios)
-├── frontend/             # HTML/CSS/JS del panel (servido estáticamente)
-├── supabase/schema.sql   # Esquema SQL normalizado para crear las tablas
-├── vercel.json           # Configuración de despliegue en Vercel
-├── scripts/build-check.js# Valida que el proyecto compila (npm run build)
-└── .env.example          # Plantilla de variables de entorno
+├── api/index.js              # Entry serverless Vercel (exporta la app Express)
+├── backend/src/
+│   ├── app.js                # Ensambla la app Express y monta las rutas
+│   ├── config.js             # Configuración desde variables de entorno
+│   ├── lib/                  # Servicios y utilidades reutilizables
+│   │   ├── supabase.js       # Cliente único de Supabase (lazy)
+│   │   ├── tmdb.js           # Servicio TMDb
+│   │   ├── m3u.js            # Generador M3U
+│   │   ├── streamChecker.js  # Verificador de streams caídos
+│   │   └── helpers.js        # Géneros/servidores
+│   ├── middleware/
+│   │   └── auth.js           # Autenticación JWT
+│   └── routes/               # Rutas API (auth, tmdb, movies, series, channels, dashboard, m3u, streams)
+├── public/                   # Frontend HTML/CSS/JS (servido estáticamente por Vercel)
+├── supabase/schema.sql       # Esquema SQL normalizado
+├── scripts/build-check.js    # Valida que el proyecto compila (npm run build)
+├── vercel.json               # Configuración de despliegue en Vercel
+├── package.json
+├── .env.example              # Plantilla de variables de entorno
+└── playlist.m3u              # Ejemplo estático (la lista real se genera vía API)
 ```
+
+> **Nota sobre `api/`:** el proyecto usa una app Express monolítica. Se expone como **una sola función serverless** (`api/index.js`) que monta todas las rutas desde `backend/src/routes`. Dividir en varias funciones (`api/m3u`, `api/movies`, etc.) duplicaría la app, el middleware y el cliente de Supabase en cada arranque, así que se mantiene un único entry point; la modularidad vive dentro de `backend/src/routes`.
+
+---
 
 ---
 
@@ -92,9 +109,9 @@ npm start         # arranque en producción local
 1. Sube el repo a GitHub.
 2. En Vercel, importa el repositorio (detección automática de Node.js).
 3. En **Settings → Environment Variables** añade las mismas variables de `.env.example` (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `TMDB_API_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `JWT_SECRET`).
-4. Despliega. `vercel.json` ya direcciona todo el tráfico a la *serverless function* de Express (`api/index.js`).
+4. Despliega. `vercel.json` direcciona `/api/*` a la *serverless function* de Express (`api/index.js`); el resto (el frontend en `public/`) lo sirve Vercel como archivos estáticos.
 
-El frontend queda servido por la propia función en `/` y la API en `/api/*`.
+El frontend queda en `/` (estático) y la API en `/api/*` (función). En desarrollo local, `npm run dev` sirve todo desde la propia app Express.
 
 ---
 

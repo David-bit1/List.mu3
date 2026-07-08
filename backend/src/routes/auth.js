@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { signToken } = require('../auth');
+const { signToken } = require('../middleware/auth');
 const config = require('../config');
 
 router.post('/login', (req, res) => {

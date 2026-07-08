@@ -1,4 +1,4 @@
-const config = require('./config');
+const config = require('../config');
 
 async function tmdbFetch(path, params = {}) {
   const url = new URL(config.tmdbBase + path);

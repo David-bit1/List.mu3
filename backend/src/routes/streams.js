@@ -1,6 +1,6 @@
 const router = require('express').Router();
-const { authMiddleware } = require('../auth');
-const { checkAll } = require('../streamChecker');
+const { authMiddleware } = require('../middleware/auth');
+const { checkAll } = require('../lib/streamChecker');
 
 router.use(authMiddleware);
 

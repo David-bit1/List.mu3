@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const m3u = require('../m3u');
+const m3u = require('../lib/m3u');
 
 const allowed = new Set(['movies', 'series', 'tv', 'all']);
 

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const config = require('./config');
+const config = require('../config');
 
 function signToken(user) {
   return jwt.sign({ user, role: 'admin' }, config.jwtSecret, { expiresIn: '12h' });

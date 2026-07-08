@@ -22,6 +22,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/m3u', m3uRoutes);
 
-app.use(express.static(path.join(__dirname, '..', '..', 'frontend')));
+app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 
 module.exports = app;
