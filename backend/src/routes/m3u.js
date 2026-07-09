@@ -6,13 +6,17 @@ const allowed = new Set(['movies', 'series', 'tv', 'all']);
 router.get('/', async (req, res) => {
   try {
     const { content } = await m3u.generateUltra();
-    res.setHeader('Content-Type', 'application/x-mpegURL; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="ultrapelis.m3u"');
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8');
+    if (req.query.download === '1') {
+      res.setHeader('Content-Disposition', 'attachment; filename="ultrapelis.m3u"');
+    }
     res.send(content);
   } catch (e) {
     console.error('[m3u] fallo total al generar:', e.message);
-    res.setHeader('Content-Type', 'application/x-mpegURL; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="ultrapelis.m3u"');
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8');
+    if (req.query.download === '1') {
+      res.setHeader('Content-Disposition', 'attachment; filename="ultrapelis.m3u"');
+    }
     res.send('#EXTM3U\n');
   }
 });
