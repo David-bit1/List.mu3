@@ -26,9 +26,23 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const b = req.body || {};
+  const seriesData = {
+    tmdb_id: b.tmdb_id,
+    title: b.title,
+    original_title: b.original_title,
+    synopsis: b.synopsis,
+    year: b.year,
+    country: b.country,
+    certification: b.certification,
+    rating: b.rating,
+    poster_path: b.poster_path,
+    backdrop_path: b.backdrop_path,
+    category_id: b.category_id,
+    active: b.active !== false,
+  };
   const { data: series, error } = await supabase
     .from('series')
-    .upsert({ ...b }, { onConflict: 'tmdb_id' })
+    .upsert(seriesData, { onConflict: 'tmdb_id' })
     .select('id')
     .single();
   if (error) return res.status(500).json({ error: error.message });

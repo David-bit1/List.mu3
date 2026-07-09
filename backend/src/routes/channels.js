@@ -37,7 +37,19 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  const { error } = await supabase.from('channels').update(req.body).eq('id', req.params.id);
+  const b = req.body || {};
+  const channelData = {
+    name: b.name,
+    logo: b.logo,
+    group_title: b.group_title,
+    country: b.country,
+    language: b.language,
+    stream: b.stream,
+    tvg_id: b.tvg_id,
+    tvg_name: b.tvg_name,
+    active: b.active,
+  };
+  const { error } = await supabase.from('channels').update(channelData).eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ ok: true });
 });

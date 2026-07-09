@@ -26,9 +26,24 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const b = req.body || {};
+  const movieData = {
+    tmdb_id: b.tmdb_id,
+    title: b.title,
+    original_title: b.original_title,
+    synopsis: b.synopsis,
+    year: b.year,
+    duration: b.duration,
+    country: b.country,
+    certification: b.certification,
+    rating: b.rating,
+    poster_path: b.poster_path,
+    backdrop_path: b.backdrop_path,
+    category_id: b.category_id,
+    active: b.active !== false,
+  };
   const { data: movie, error } = await supabase
     .from('movies')
-    .upsert({ ...b, tmdb_id: b.tmdb_id }, { onConflict: 'tmdb_id' })
+    .upsert(movieData, { onConflict: 'tmdb_id' })
     .select('id')
     .single();
   if (error) return res.status(500).json({ error: error.message });
@@ -48,9 +63,25 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
+  const b = req.body || {};
+  const movieData = {
+    tmdb_id: b.tmdb_id,
+    title: b.title,
+    original_title: b.original_title,
+    synopsis: b.synopsis,
+    year: b.year,
+    duration: b.duration,
+    country: b.country,
+    certification: b.certification,
+    rating: b.rating,
+    poster_path: b.poster_path,
+    backdrop_path: b.backdrop_path,
+    category_id: b.category_id,
+    active: b.active !== false,
+  };
   const { data, error } = await supabase
     .from('movies')
-    .update(req.body)
+    .update(movieData)
     .eq('id', req.params.id)
     .select('id')
     .single();
